@@ -51,7 +51,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   });
 
   await app.register(fastifyCors, {
-    origin: [config.clientUrl, 'http://localhost:3001', 'https://www.rvgroupltd.in'],
+    origin: [config.clientUrl, 'http://localhost:3001', 'https://www.rvgroupltd.in', 'real-fkwqz4q9f-igsahiils-projects.vercel.app'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
