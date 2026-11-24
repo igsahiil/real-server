@@ -28,15 +28,15 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   const app = fastify({
     logger: config.isDev
       ? {
-          transport: {
-            target: 'pino-pretty',
-            options: {
-              colorize: true,
-              translateTime: 'HH:MM:ss Z',
-              ignore: 'pid,hostname',
-            },
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss Z',
+            ignore: 'pid,hostname',
           },
-        }
+        },
+      }
       : true,
     ...opts,
   });
@@ -51,7 +51,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   });
 
   await app.register(fastifyCors, {
-    origin: [config.clientUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: [config.clientUrl, 'http://localhost:3000', 'https://www.rvgroupltd.in'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
@@ -72,11 +72,11 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   // Auth Guards Decorators
   await app.register(authGuardsPlugin);
 
-  await app.register(fastifyRateLimit, {
-    max: 200,
-    timeWindow: '1 minute',
-    allowList: ['127.0.0.1', 'localhost'],
-  });
+  // await app.register(fastifyRateLimit, {
+  //   max: 200,
+  //   timeWindow: '1 minute',
+  //   allowList: ['127.0.0.1', 'localhost'],
+  // });
 
   await app.register(fastifyMultipart, {
     limits: {
