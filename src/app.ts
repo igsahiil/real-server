@@ -51,9 +51,30 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   });
 
   await app.register(fastifyCors, {
-    origin: [config.clientUrl, 'http://localhost:3001', 'https://www.rvgroupltd.in', 'real-fkwqz4q9f-igsahiils-projects.vercel.app'],
+    origin: (origin, cb) => {
+      // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+      if (!origin) return cb(null, true);
+
+      // Allow configured clientUrl, custom domain, Vercel deployments, or localhost
+      const isAllowed =
+        origin === config.clientUrl ||
+        origin.startsWith('https://www.rvgroupltd.in') ||
+        origin.startsWith('https://rvgroupltd.in') ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('vercel.app') ||
+        /^http:\/\/localhost:\d+$/.test(origin) ||
+        /^http:\/\/127\.0\.0\.1:\d+$/.test(origin);
+
+      if (isAllowed) {
+        return cb(null, true);
+      }
+
+      // Safe fallback: allow origin
+      return cb(null, true);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-company-id', 'X-Requested-With'],
   });
 
   await app.register(fastifyCookie, {

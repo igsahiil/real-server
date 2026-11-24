@@ -10,6 +10,15 @@ import {
 } from './schemas.js';
 
 export const authRoutes: FastifyPluginAsync = async (fastify) => {
+  const isProd = process.env.NODE_ENV === 'production';
+  const cookieOptions = {
+    path: '/',
+    httpOnly: true,
+    secure: isProd,
+    sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+  };
+
   // POST /api/v1/auth/register (User)
   fastify.post<{ Body: RegisterBody }>(
     '/api/v1/auth/register',
@@ -22,13 +31,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         { expiresIn: '7d' }
       );
 
-      reply.setCookie('token', token, {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-      });
+      reply.setCookie('token', token, cookieOptions);
 
       return reply.status(201).send({
         data: {
@@ -58,13 +61,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         { expiresIn: '7d' }
       );
 
-      reply.setCookie('token', token, {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60,
-      });
+      reply.setCookie('token', token, cookieOptions);
 
       return reply.status(201).send({
         data: {
@@ -100,13 +97,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         { expiresIn: '7d' }
       );
 
-      reply.setCookie('token', token, {
-        path: '/',
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60,
-      });
+      reply.setCookie('token', token, cookieOptions);
 
       return reply.send({
         data: {
@@ -135,7 +126,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   // POST /api/v1/auth/logout
   fastify.post('/api/v1/auth/logout', async (request, reply) => {
-    reply.clearCookie('token', { path: '/' });
+    reply.clearCookie('token', {
+      path: '/',
+      secure: isProd,
+      sameSite: (isProd ? 'none' : 'lax') as 'none' | 'lax',
+    });
     return reply.send({ data: { message: 'Logged out successfully' } });
   });
 
