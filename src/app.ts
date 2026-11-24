@@ -51,7 +51,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   });
 
   await app.register(fastifyCors, {
-    origin: [config.clientUrl, 'http://localhost:3000', 'https://www.rvgroupltd.in'],
+    origin: [config.clientUrl, 'http://localhost:3001', 'https://www.rvgroupltd.in'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
