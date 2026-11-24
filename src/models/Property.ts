@@ -2,6 +2,7 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export type PropertyListingType = 'sale' | 'rent' | 'lease';
 export type PropertyCategory = 'residential' | 'commercial' | 'plot_land';
+export type PropertyVisibility = 'public' | 'private';
 export type PropertyStatus =
   | 'draft'
   | 'pending'
@@ -55,6 +56,10 @@ export interface IProperty extends Document {
   videoUrl?: string;
   floorPlanUrl?: string;
   status: PropertyStatus;
+  visibility: PropertyVisibility;
+  shareToken?: string;
+  shareTokenExpiresAt?: Date;
+  isShareTokenActive: boolean;
   rejectionReason?: string;
   approvedBy?: Types.ObjectId;
   approvedAt?: Date;
@@ -110,6 +115,27 @@ const PropertySchema = new Schema<IProperty>(
       type: String,
       enum: ['draft', 'pending', 'approved', 'rejected', 'sold', 'rented', 'expired', 'paused'],
       default: 'pending',
+      index: true,
+    },
+    visibility: {
+      type: String,
+      enum: ['public', 'private'],
+      default: 'public',
+      index: true,
+    },
+    shareToken: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
+    shareTokenExpiresAt: {
+      type: Date,
+      sparse: true,
+    },
+    isShareTokenActive: {
+      type: Boolean,
+      default: false,
       index: true,
     },
     rejectionReason: { type: String, trim: true },

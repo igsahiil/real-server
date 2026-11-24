@@ -1,11 +1,16 @@
+import crypto from 'crypto';
 import { FastifyPluginAsync } from 'fastify';
 import { Property, IProperty } from '../../models/Property.js';
 import { generatePropertySlug } from '../../utils/slug.js';
 import {
   CreatePropertyBodySchema,
   UpdatePropertyBodySchema,
+  GenerateShareTokenBodySchema,
+  UpdateVisibilityBodySchema,
   CreatePropertyBody,
   UpdatePropertyBody,
+  GenerateShareTokenBody,
+  UpdateVisibilityBody,
 } from './schemas.js';
 
 export const agentPropertyRoutes: FastifyPluginAsync = async (fastify) => {
@@ -54,6 +59,7 @@ export const agentPropertyRoutes: FastifyPluginAsync = async (fastify) => {
         images: body.images,
         videoUrl: body.videoUrl,
         floorPlanUrl: body.floorPlanUrl,
+        visibility: body.visibility || 'public',
         status: initialStatus,
         approvedAt: initialStatus === 'approved' ? new Date() : undefined,
         approvedBy: initialStatus === 'approved' ? request.user.id : undefined,
@@ -131,6 +137,7 @@ export const agentPropertyRoutes: FastifyPluginAsync = async (fastify) => {
       if (updates.images) property.images = updates.images;
       if (updates.videoUrl !== undefined) property.videoUrl = updates.videoUrl;
       if (updates.floorPlanUrl !== undefined) property.floorPlanUrl = updates.floorPlanUrl;
+      if (updates.visibility) property.visibility = updates.visibility;
 
       if (updates.location) {
         property.location = {
@@ -153,6 +160,112 @@ export const agentPropertyRoutes: FastifyPluginAsync = async (fastify) => {
       await property.save();
 
       return reply.send({ data: property });
+    }
+  );
+
+  // PATCH /api/v1/agent/properties/:id/visibility (toggle public / private)
+  fastify.patch<{ Params: { id: string }; Body: UpdateVisibilityBody }>(
+    '/api/v1/agent/properties/:id/visibility',
+    {
+      schema: { body: UpdateVisibilityBodySchema },
+      preHandler: [fastify.authenticate, fastify.requireVerifiedAgent],
+    },
+    async (request, reply) => {
+      const property = await Property.findOne({
+        _id: request.params.id,
+        agentId: request.user.id,
+      });
+
+      if (!property) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Property listing not found or not owned by you',
+            requestId: request.id,
+          },
+        });
+      }
+
+      property.visibility = request.body.visibility;
+      await property.save();
+
+      return reply.send({ data: property });
+    }
+  );
+
+  // POST /api/v1/agent/properties/:id/share-token (generate or refresh a secure share token)
+  fastify.post<{ Params: { id: string }; Body: GenerateShareTokenBody }>(
+    '/api/v1/agent/properties/:id/share-token',
+    {
+      schema: { body: GenerateShareTokenBodySchema },
+      preHandler: [fastify.authenticate, fastify.requireVerifiedAgent],
+    },
+    async (request, reply) => {
+      const property = await Property.findOne({
+        _id: request.params.id,
+        agentId: request.user.id,
+      });
+
+      if (!property) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Property listing not found or not owned by you',
+            requestId: request.id,
+          },
+        });
+      }
+
+      const token = crypto.randomBytes(16).toString('hex');
+      const expiresInDays = request.body?.expiresInDays ?? 30;
+      const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000);
+
+      property.shareToken = token;
+      property.shareTokenExpiresAt = expiresAt;
+      property.isShareTokenActive = true;
+      await property.save();
+
+      return reply.send({
+        data: {
+          shareToken: token,
+          sharePath: `/properties/private/${token}`,
+          expiresAt,
+          isShareTokenActive: true,
+        },
+      });
+    }
+  );
+
+  // DELETE /api/v1/agent/properties/:id/share-token (revoke active share token)
+  fastify.delete<{ Params: { id: string } }>(
+    '/api/v1/agent/properties/:id/share-token',
+    { preHandler: [fastify.authenticate, fastify.requireVerifiedAgent] },
+    async (request, reply) => {
+      const property = await Property.findOne({
+        _id: request.params.id,
+        agentId: request.user.id,
+      });
+
+      if (!property) {
+        return reply.status(404).send({
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Property listing not found or not owned by you',
+            requestId: request.id,
+          },
+        });
+      }
+
+      property.isShareTokenActive = false;
+      property.shareToken = undefined;
+      property.shareTokenExpiresAt = undefined;
+      await property.save();
+
+      return reply.send({
+        data: {
+          message: 'Share token has been revoked successfully',
+        },
+      });
     }
   );
 

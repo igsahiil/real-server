@@ -39,6 +39,7 @@ export const CreatePropertyBodySchema = Type.Object({
   images: Type.Array(PropertyImageSchema, { minItems: 1 }),
   videoUrl: Type.Optional(Type.String()),
   floorPlanUrl: Type.Optional(Type.String()),
+  visibility: Type.Optional(Type.Union([Type.Literal('public'), Type.Literal('private')])),
 });
 export type CreatePropertyBody = Static<typeof CreatePropertyBodySchema>;
 
@@ -50,3 +51,13 @@ export const VerifyPropertyBodySchema = Type.Object({
   rejectionReason: Type.Optional(Type.String({ maxLength: 500 })),
 });
 export type VerifyPropertyBody = Static<typeof VerifyPropertyBodySchema>;
+
+export const GenerateShareTokenBodySchema = Type.Object({
+  expiresInDays: Type.Optional(Type.Number({ minimum: 1, maximum: 365 })),
+});
+export type GenerateShareTokenBody = Static<typeof GenerateShareTokenBodySchema>;
+
+export const UpdateVisibilityBodySchema = Type.Object({
+  visibility: Type.Union([Type.Literal('public'), Type.Literal('private')]),
+});
+export type UpdateVisibilityBody = Static<typeof UpdateVisibilityBodySchema>;
