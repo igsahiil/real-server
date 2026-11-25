@@ -19,6 +19,7 @@ import { masterDataRoutes } from './modules/master/routes.js';
 import { inquiryRoutes } from './modules/inquiries/routes.js';
 import { favoriteRoutes } from './modules/favorites/routes.js';
 import { adminDashboardRoutes } from './modules/admin/dashboard.routes.js';
+import { uploadRoutes } from './modules/uploads/routes.js';
 
 export interface AppOptions extends FastifyServerOptions {
   skipDatabase?: boolean;
@@ -101,7 +102,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
 
   await app.register(fastifyMultipart, {
     limits: {
-      fileSize: 10 * 1024 * 1024,
+      fileSize: 50 * 1024 * 1024,
       files: 20,
     },
   });
@@ -122,6 +123,7 @@ export async function buildApp(opts: AppOptions = {}): Promise<FastifyInstance> 
   await app.register(masterDataRoutes);
   await app.register(inquiryRoutes);
   await app.register(favoriteRoutes);
+  await app.register(uploadRoutes);
 
   return app;
 }

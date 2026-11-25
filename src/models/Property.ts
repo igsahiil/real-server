@@ -19,6 +19,11 @@ export interface IPropertyImage {
   isCover: boolean;
 }
 
+export interface IPropertyDocument {
+  name: string;
+  url: string;
+}
+
 export interface IPropertyLocation {
   country: string;
   state: string;
@@ -55,6 +60,7 @@ export interface IProperty extends Document {
   images: IPropertyImage[];
   videoUrl?: string;
   floorPlanUrl?: string;
+  documents?: IPropertyDocument[];
   status: PropertyStatus;
   visibility: PropertyVisibility;
   shareToken?: string;
@@ -111,6 +117,12 @@ const PropertySchema = new Schema<IProperty>(
     ],
     videoUrl: { type: String },
     floorPlanUrl: { type: String },
+    documents: [
+      {
+        name: { type: String, required: true },
+        url: { type: String, required: true },
+      },
+    ],
     status: {
       type: String,
       enum: ['draft', 'pending', 'approved', 'rejected', 'sold', 'rented', 'expired', 'paused'],

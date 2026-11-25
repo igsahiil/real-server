@@ -59,6 +59,7 @@ export const agentPropertyRoutes: FastifyPluginAsync = async (fastify) => {
         images: body.images,
         videoUrl: body.videoUrl,
         floorPlanUrl: body.floorPlanUrl,
+        documents: body.documents || [],
         visibility: body.visibility || 'public',
         status: initialStatus,
         approvedAt: initialStatus === 'approved' ? new Date() : undefined,
@@ -137,6 +138,7 @@ export const agentPropertyRoutes: FastifyPluginAsync = async (fastify) => {
       if (updates.images) property.images = updates.images;
       if (updates.videoUrl !== undefined) property.videoUrl = updates.videoUrl;
       if (updates.floorPlanUrl !== undefined) property.floorPlanUrl = updates.floorPlanUrl;
+      if (updates.documents !== undefined) property.documents = updates.documents;
       if (updates.visibility) property.visibility = updates.visibility;
 
       if (updates.location) {

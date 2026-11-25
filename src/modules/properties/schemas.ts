@@ -23,6 +23,11 @@ export const PropertyImageSchema = Type.Object({
   isCover: Type.Boolean({ default: false }),
 });
 
+export const PropertyDocumentSchema = Type.Object({
+  name: Type.String({ minLength: 1 }),
+  url: Type.String({ minLength: 5 }),
+});
+
 export const CreatePropertyBodySchema = Type.Object({
   title: Type.String({ minLength: 5, maxLength: 200 }),
   description: Type.String({ minLength: 20, maxLength: 5000 }),
@@ -39,6 +44,7 @@ export const CreatePropertyBodySchema = Type.Object({
   images: Type.Array(PropertyImageSchema, { minItems: 1 }),
   videoUrl: Type.Optional(Type.String()),
   floorPlanUrl: Type.Optional(Type.String()),
+  documents: Type.Optional(Type.Array(PropertyDocumentSchema)),
   visibility: Type.Optional(Type.Union([Type.Literal('public'), Type.Literal('private')])),
 });
 export type CreatePropertyBody = Static<typeof CreatePropertyBodySchema>;
